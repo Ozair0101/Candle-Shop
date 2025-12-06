@@ -10,7 +10,7 @@ class ProductController extends ApiController
 {
     public function index()
     {
-        $products = Product::all();
+        $products = Product::with('images')->get();
         return $this->success($products, 'Products retrieved successfully');
     }
 
@@ -21,25 +21,77 @@ class ProductController extends ApiController
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
             'is_active' => 'boolean',
-            'category_id' => 'required|exists:categories,category_id'
+            'category_id' => 'required|exists:categories,category_id',
+            'images' => 'sometimes|array',
+            'images.*.url' => 'required|url',
+            'images.*.is_primary' => 'sometimes|boolean'
         ]);
 
         if ($validator->fails()) {
             return $this->error('Validation Error', 422, $validator->errors());
         }
 
-        $product = Product::create($validator->validated());
+        try {
+            DB::beginTransaction();
 
-        return $this->success($product, 'Product created successfully', 201);
+            // Create the product
+            $product = Product::create($request->only([
+                'name',
+                'description',
+                'price',
+                'is_active',
+                'category_id'
+            ]));
 
-        $product = Product::create($validator->validated());
+            // Handle product images if provided
+            if ($request->has('images') && is_array($request->images)) {
+                $hasPrimary = false;
+                $images = [];
 
-        return $this->success($product, 'Product created successfully', 201);
+                foreach ($request->images as $imageData) {
+                    $isPrimary = $imageData['is_primary'] ?? false;
+                    
+                    // Only one primary image is allowed
+                    if ($isPrimary) {
+                        if ($hasPrimary) {
+                            $isPrimary = false;
+                        } else {
+                            $hasPrimary = true;
+                        }
+                    }
+
+                    $images[] = new ProductImage([
+                        'url' => $imageData['url'],
+                        'is_primary' => $isPrimary
+                    ]);
+                }
+
+                // If no primary image was specified, make the first one primary
+                if (!empty($images) && !$hasPrimary) {
+                    $images[0]->is_primary = true;
+                }
+
+                // Save all images
+                $product->images()->saveMany($images);
+            }
+
+            DB::commit();
+
+            // Reload the product with its images
+            $product->load('images');
+
+            return $this->success($product, 'Product created successfully', 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('Failed to create product: ' . $e->getMessage(), 500);
+        }
     }
+
 
     public function show($id)
     {
-        $product = Product::find($id);
+        $product = Product::with('images')->find($id);
 
         if (!$product) {
             return $this->error('Product not found', 404);
@@ -60,17 +112,96 @@ class ProductController extends ApiController
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
-            'is_active' => 'boolean',
-            'category_id' => 'sometimes|required|exists:categories,category_id'
+            'is_active' => 'sometimes|boolean',
+            'category_id' => 'sometimes|required|exists:categories,category_id',
+            'images' => 'sometimes|array',
+            'images.*.id' => 'sometimes|exists:product_images,id,product_id,' . $id,
+            'images.*.url' => 'required_without:images.*.id|url',
+            'images.*.is_primary' => 'sometimes|boolean',
+            'deleted_image_ids' => 'sometimes|array',
+            'deleted_image_ids.*' => 'exists:product_images,id,product_id,' . $id
         ]);
 
         if ($validator->fails()) {
             return $this->error('Validation Error', 422, $validator->errors());
         }
 
-        $product->update($validator->validated());
+        try {
+            DB::beginTransaction();
 
-        return $this->success($product, 'Product updated successfully');
+            // Update the product
+            $product->update($request->only([
+                'name',
+                'description',
+                'price',
+                'is_active',
+                'category_id'
+            ]));
+
+            // Handle image deletions
+            if ($request->has('deleted_image_ids') && is_array($request->deleted_image_ids)) {
+                // Don't allow deleting the last image if it's the only one
+                $remainingImages = $product->images()->whereNotIn('id', $request->deleted_image_ids)->count();
+                if ($remainingImages === 0 && $product->images()->count() === count($request->deleted_image_ids)) {
+                    return $this->error('Cannot delete all images. A product must have at least one image.', 422);
+                }
+
+                // Delete the specified images
+                $product->images()->whereIn('id', $request->deleted_image_ids)->delete();
+            }
+
+            // Handle image updates and additions
+            if ($request->has('images') && is_array($request->images)) {
+                $hasPrimary = $product->images()->where('is_primary', true)->exists();
+                
+                foreach ($request->images as $imageData) {
+                    $isPrimary = $imageData['is_primary'] ?? false;
+                    
+                    // If this is a new image
+                    if (!isset($imageData['id'])) {
+                        // Only one primary image is allowed
+                        if ($isPrimary && $hasPrimary) {
+                            $product->images()->update(['is_primary' => false]);
+                            $hasPrimary = true;
+                        } elseif ($isPrimary) {
+                            $hasPrimary = true;
+                        }
+
+                        $product->images()->create([
+                            'url' => $imageData['url'],
+                            'is_primary' => $isPrimary
+                        ]);
+                    } 
+                    // If this is an existing image being updated
+                    else {
+                        $image = $product->images()->find($imageData['id']);
+                        if ($image) {
+                            // If this image is being set as primary, unset any existing primary
+                            if ($isPrimary && !$image->is_primary) {
+                                $product->images()->where('id', '!=', $image->id)->update(['is_primary' => false]);
+                                $hasPrimary = true;
+                            }
+
+                            $image->update([
+                                'url' => $imageData['url'] ?? $image->url,
+                                'is_primary' => $isPrimary
+                            ]);
+                        }
+                    }
+                }
+            }
+
+            DB::commit();
+
+            // Reload the product with its updated images
+            $product->load('images');
+
+            return $this->success($product, 'Product updated successfully');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('Failed to update product: ' . $e->getMessage(), 500);
+        }
     }
 
     public function destroy($id)
