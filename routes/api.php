@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
+use App\Http\Controllers\Api\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,4 +55,15 @@ Route::prefix('orders')->group(function () {
     Route::put('/{orderId}', [OrderController::class, 'update']); // Update order status
     Route::delete('/{orderId}', [OrderController::class, 'destroy']); // Delete order
     Route::post('/{orderId}/cancel', [OrderController::class, 'cancel']); // Cancel order
+    Route::get('/{orderId}/payments', [PaymentController::class, 'getByOrder']); // Get payments for order
+});
+
+// Payment API Routes
+Route::prefix('payments')->group(function () {
+    Route::get('/', [PaymentController::class, 'index']); // Get all payments (with filters)
+    Route::post('/', [PaymentController::class, 'store']); // Create new payment
+    Route::get('/{paymentId}', [PaymentController::class, 'show']); // Get specific payment
+    Route::put('/{paymentId}', [PaymentController::class, 'update']); // Update payment status
+    Route::delete('/{paymentId}', [PaymentController::class, 'destroy']); // Delete payment
+    Route::post('/{paymentId}/refund', [PaymentController::class, 'refund']); // Refund payment
 });
