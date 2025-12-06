@@ -1,0 +1,63 @@
+### Shopping Cart API Tests
+
+### 1. Get or Create Cart for User
+# Pass user_id as query parameter
+GET http://127.0.0.1:8000/api/cart?user_id=1
+Content-Type: application/json
+
+###
+
+### 2. Add Item to Cart
+POST http://127.0.0.1:8000/api/cart/items
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "product_id": 1,
+    "variant_id": null,
+    "quantity": 2
+}
+
+###
+
+### 3. Add Another Item to Cart (with variant)
+POST http://127.0.0.1:8000/api/cart/items
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "product_id": 2,
+    "variant_id": 5,
+    "quantity": 1
+}
+
+###
+
+### 4. Update Cart Item Quantity
+# Replace {cartItemId} with actual cart_item_id from previous response
+PUT http://127.0.0.1:8000/api/cart/items/1
+Content-Type: application/json
+
+{
+    "quantity": 5
+}
+
+###
+
+### 5. Remove Item from Cart
+# Replace {cartItemId} with actual cart_item_id
+DELETE http://127.0.0.1:8000/api/cart/items/2
+
+###
+
+### 6. Clear All Items from Cart
+# Replace {cartId} with actual cart_id
+DELETE http://127.0.0.1:8000/api/cart/1/clear
+
+###
+
+### 7. Delete Entire Cart
+# Replace {cartId} with actual cart_id
+DELETE http://127.0.0.1:8000/api/cart/1
+
+###
