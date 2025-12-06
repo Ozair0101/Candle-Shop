@@ -1,0 +1,172 @@
+### Order API Tests
+
+### 1. Get All Orders
+GET http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+###
+
+### 2. Get Orders by User ID
+GET http://127.0.0.1:8000/api/orders?user_id=1
+Content-Type: application/json
+
+###
+
+### 3. Get Orders by Status
+GET http://127.0.0.1:8000/api/orders?status=pending
+Content-Type: application/json
+
+###
+
+### 4. Get Orders by User and Status
+GET http://127.0.0.1:8000/api/orders?user_id=1&status=paid
+Content-Type: application/json
+
+###
+
+### 5. Create New Order
+POST http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "payment_method": "card",
+    "items": [
+        {
+            "product_id": 1,
+            "variant_id": null,
+            "quantity": 2
+        },
+        {
+            "product_id": 2,
+            "variant_id": 5,
+            "quantity": 1
+        }
+    ]
+}
+
+###
+
+### 6. Create Order and Clear Cart
+POST http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "payment_method": "cod",
+    "from_cart_id": 1,
+    "items": [
+        {
+            "product_id": 1,
+            "variant_id": null,
+            "quantity": 3
+        }
+    ]
+}
+
+###
+
+### 7. Get Specific Order
+# Replace {orderId} with actual order_id
+GET http://127.0.0.1:8000/api/orders/1
+Content-Type: application/json
+
+###
+
+### 8. Update Order Status to Paid
+# Replace {orderId} with actual order_id
+PUT http://127.0.0.1:8000/api/orders/1
+Content-Type: application/json
+
+{
+    "status": "paid"
+}
+
+###
+
+### 9. Update Order Status to Shipped
+PUT http://127.0.0.1:8000/api/orders/1
+Content-Type: application/json
+
+{
+    "status": "shipped"
+}
+
+###
+
+### 10. Update Order Status to Delivered
+PUT http://127.0.0.1:8000/api/orders/1
+Content-Type: application/json
+
+{
+    "status": "delivered"
+}
+
+###
+
+### 11. Cancel Order
+# Replace {orderId} with actual order_id
+POST http://127.0.0.1:8000/api/orders/1/cancel
+Content-Type: application/json
+
+###
+
+### 12. Delete Order (only pending or cancelled)
+# Replace {orderId} with actual order_id
+DELETE http://127.0.0.1:8000/api/orders/1
+
+###
+
+### Order Status Flow Examples
+
+### Example 1: Card Payment Order
+POST http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "payment_method": "card",
+    "items": [
+        {
+            "product_id": 1,
+            "quantity": 1
+        }
+    ]
+}
+
+###
+
+### Example 2: Cash on Delivery Order
+POST http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "payment_method": "cod",
+    "items": [
+        {
+            "product_id": 2,
+            "quantity": 2
+        }
+    ]
+}
+
+###
+
+### Example 3: PayPal Order
+POST http://127.0.0.1:8000/api/orders
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "payment_method": "paypal",
+    "items": [
+        {
+            "product_id": 1,
+            "variant_id": 3,
+            "quantity": 5
+        }
+    ]
+}
+
+###
