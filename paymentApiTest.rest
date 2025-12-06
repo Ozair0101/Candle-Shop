@@ -1,0 +1,260 @@
+### Payment API Tests
+
+### 1. Get All Payments
+GET http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+###
+
+### 2. Get Payments by Order ID
+GET http://127.0.0.1:8000/api/payments?order_id=1
+Content-Type: application/json
+
+###
+
+### 3. Get Payments by Status
+GET http://127.0.0.1:8000/api/payments?status=success
+Content-Type: application/json
+
+###
+
+### 4. Get Payments by Provider
+GET http://127.0.0.1:8000/api/payments?payment_provider=Stripe
+Content-Type: application/json
+
+###
+
+### 5. Get Payments for Specific Order (Alternative)
+# Replace {orderId} with actual order_id
+GET http://127.0.0.1:8000/api/orders/1/payments
+Content-Type: application/json
+
+###
+
+### 6. Create New Payment - Stripe
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 1,
+    "amount": 199.98,
+    "payment_provider": "Stripe",
+    "transaction_id": "ch_1ABC234DEF567GHI"
+}
+
+###
+
+### 7. Create New Payment - PayPal
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 2,
+    "amount": 99.99,
+    "payment_provider": "PayPal",
+    "transaction_id": "PAYID-MXYZ123ABC456"
+}
+
+###
+
+### 8. Create New Payment - Razorpay
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 3,
+    "amount": 299.50,
+    "payment_provider": "Razorpay",
+    "transaction_id": "pay_ABCD1234567890"
+}
+
+###
+
+### 9. Get Specific Payment
+# Replace {paymentId} with actual payment_id
+GET http://127.0.0.1:8000/api/payments/1
+Content-Type: application/json
+
+###
+
+### 10. Update Payment Status to Success
+# Replace {paymentId} with actual payment_id
+PUT http://127.0.0.1:8000/api/payments/1
+Content-Type: application/json
+
+{
+    "status": "success",
+    "transaction_id": "ch_1ABC234DEF567GHI_confirmed"
+}
+
+###
+
+### 11. Update Payment Status to Failed
+PUT http://127.0.0.1:8000/api/payments/2
+Content-Type: application/json
+
+{
+    "status": "failed"
+}
+
+###
+
+### 12. Refund Payment
+# Replace {paymentId} with actual payment_id of a successful payment
+POST http://127.0.0.1:8000/api/payments/1/refund
+Content-Type: application/json
+
+{
+    "transaction_id": "re_1ABC234DEF567GHI"
+}
+
+###
+
+### 13. Delete Payment (only pending or failed)
+# Replace {paymentId} with actual payment_id
+DELETE http://127.0.0.1:8000/api/payments/2
+
+###
+
+### Payment Flow Examples
+
+### Example 1: Complete Card Payment Flow
+# Step 1: Create pending payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 1,
+    "amount": 199.98,
+    "payment_provider": "Stripe"
+}
+
+###
+
+# Step 2: Update to success (after payment confirmation)
+# Use payment_id from previous response
+PUT http://127.0.0.1:8000/api/payments/1
+Content-Type: application/json
+
+{
+    "status": "success",
+    "transaction_id": "ch_1ABC234DEF567GHI"
+}
+
+###
+
+### Example 2: Failed Payment Scenario
+# Step 1: Create payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 2,
+    "amount": 99.99,
+    "payment_provider": "PayPal"
+}
+
+###
+
+# Step 2: Mark as failed
+PUT http://127.0.0.1:8000/api/payments/2
+Content-Type: application/json
+
+{
+    "status": "failed"
+}
+
+###
+
+# Step 3: Delete failed payment
+DELETE http://127.0.0.1:8000/api/payments/2
+
+###
+
+### Example 3: Refund Scenario
+# Step 1: Create successful payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 3,
+    "amount": 299.50,
+    "payment_provider": "Razorpay",
+    "transaction_id": "pay_ABCD1234567890"
+}
+
+###
+
+# Step 2: Mark as success
+PUT http://127.0.0.1:8000/api/payments/3
+Content-Type: application/json
+
+{
+    "status": "success"
+}
+
+###
+
+# Step 3: Process refund
+POST http://127.0.0.1:8000/api/payments/3/refund
+Content-Type: application/json
+
+{
+    "transaction_id": "rfnd_ABCD1234567890"
+}
+
+###
+
+### Multi-Provider Examples
+
+### Stripe Payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 1,
+    "amount": 199.98,
+    "payment_provider": "Stripe",
+    "transaction_id": "ch_3MmlLrLkdIwHu7ix0SNM0Fi"
+}
+
+###
+
+### PayPal Payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 2,
+    "amount": 99.99,
+    "payment_provider": "PayPal",
+    "transaction_id": "PAYID-MXYZ123ABC456DEF789"
+}
+
+###
+
+### Razorpay Payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 3,
+    "amount": 299.50,
+    "payment_provider": "Razorpay",
+    "transaction_id": "pay_KjRKZ3hZ9Ij0aZ"
+}
+
+###
+
+### Square Payment
+POST http://127.0.0.1:8000/api/payments
+Content-Type: application/json
+
+{
+    "order_id": 4,
+    "amount": 149.99,
+    "payment_provider": "Square",
+    "transaction_id": "sq0id_AbCdEfGhIjKlMnOpQrSt"
+}
+
+###
