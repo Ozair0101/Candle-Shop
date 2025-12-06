@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
+use App\Http\Controllers\Api\OrderController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -43,4 +44,14 @@ Route::prefix('cart')->group(function () {
     Route::delete('/items/{cartItemId}', [CartController::class, 'removeItem']); // Remove item from cart
     Route::delete('/{cartId}/clear', [CartController::class, 'clearCart']); // Clear all items
     Route::delete('/{cartId}', [CartController::class, 'destroy']); // Delete entire cart
+});
+
+// Order API Routes
+Route::prefix('orders')->group(function () {
+    Route::get('/', [OrderController::class, 'index']); // Get all orders (with filters)
+    Route::post('/', [OrderController::class, 'store']); // Create new order
+    Route::get('/{orderId}', [OrderController::class, 'show']); // Get specific order
+    Route::put('/{orderId}', [OrderController::class, 'update']); // Update order status
+    Route::delete('/{orderId}', [OrderController::class, 'destroy']); // Delete order
+    Route::post('/{orderId}/cancel', [OrderController::class, 'cancel']); // Cancel order
 });
