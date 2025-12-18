@@ -19,15 +19,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-// Public routes
-Route::post('/login', [AuthController::class, 'login']);
-Route::post('/register', [AuthController::class, 'register']);
-
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
-    Route::post('/logout', [AuthController::class, 'logout']);
-    Route::get('/user', [AuthController::class, 'user']);
-    
     // Cart API Routes
     Route::prefix('cart')->group(function () {
         Route::get('/', [CartController::class, 'index']); // Get cart by user_id (query param)
