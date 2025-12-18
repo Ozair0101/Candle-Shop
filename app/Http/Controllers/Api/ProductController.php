@@ -22,12 +22,19 @@ class ProductController extends ApiController
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
+            'stock_quantity' => 'integer|min:0',
             'category_id' => 'required|exists:categories,category_id',
             'images' => 'sometimes|array',
             'images.*.url' => 'required|url',
             'images.*.is_primary' => 'sometimes|boolean'
         ]);
+
+        // Validate that discount_price is less than price if provided
+        if ($request->has('discount_price') && $request->discount_price >= $request->price) {
+            return $this->error('Discount price must be less than the regular price', 422);
+        }
 
         if ($validator->fails()) {
             return $this->error('Validation Error', 422, $validator->errors());
@@ -41,7 +48,9 @@ class ProductController extends ApiController
                 'name',
                 'description',
                 'price',
+                'discount_price',
                 'is_active',
+                'stock_quantity',
                 'category_id'
             ]));
 
@@ -114,7 +123,9 @@ class ProductController extends ApiController
             'name' => 'sometimes|required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'sometimes|required|numeric|min:0',
+            'discount_price' => 'nullable|numeric|min:0',
             'is_active' => 'sometimes|boolean',
+            'stock_quantity' => 'sometimes|integer|min:0',
             'category_id' => 'sometimes|required|exists:categories,category_id',
             'images' => 'sometimes|array',
             'images.*.id' => 'sometimes|exists:product_images,id,product_id,' . $id,
@@ -123,6 +134,11 @@ class ProductController extends ApiController
             'deleted_image_ids' => 'sometimes|array',
             'deleted_image_ids.*' => 'exists:product_images,id,product_id,' . $id
         ]);
+
+        // Validate that discount_price is less than price if provided
+        if ($request->has('discount_price') && $request->has('price') && $request->discount_price >= $request->price) {
+            return $this->error('Discount price must be less than the regular price', 422);
+        }
 
         if ($validator->fails()) {
             return $this->error('Validation Error', 422, $validator->errors());
@@ -136,7 +152,9 @@ class ProductController extends ApiController
                 'name',
                 'description',
                 'price',
+                'discount_price',
                 'is_active',
+                'stock_quantity',
                 'category_id'
             ]));
 

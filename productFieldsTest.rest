@@ -1,0 +1,55 @@
+### Test Product with New Fields
+
+### 1. Create Product with Discount Price and Stock Quantity
+POST http://127.0.0.1:8000/api/products
+Content-Type: application/json
+
+{
+    "name": "Smartphone XYZ",
+    "description": "Latest smartphone with advanced features",
+    "price": 599.99,
+    "discount_price": 499.99,
+    "is_active": true,
+    "stock_quantity": 50,
+    "category_id": 1
+}
+
+###
+
+### 2. Create Product with Only Required Fields (No Discount)
+POST http://127.0.0.1:8000/api/products
+Content-Type: application/json
+
+{
+    "name": "Basic Headphones",
+    "description": "Simple wired headphones",
+    "price": 29.99,
+    "is_active": true,
+    "stock_quantity": 100,
+    "category_id": 1
+}
+
+###
+
+### 3. Update Product to Add Discount Price
+PUT http://127.0.0.1:8000/api/products/1
+Content-Type: application/json
+
+{
+    "discount_price": 449.99,
+    "stock_quantity": 45
+}
+
+###
+
+### 4. Get All Products to See New Fields
+GET http://127.0.0.1:8000/api/products
+Content-Type: application/json
+
+###
+
+### 5. Get Specific Product
+GET http://127.0.0.1:8000/api/products/1
+Content-Type: application/json
+
+###
