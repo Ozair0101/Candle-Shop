@@ -25,7 +25,7 @@ class ProductController extends ApiController
             'discount_price' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
             'stock_quantity' => 'integer|min:0',
-            'category_id' => 'required|exists:categories,category_id',
+            // 'category_id' => 'required|exists:categories,category_id',
             'images' => 'sometimes|array',
             'images.*.url' => 'required|url',
             'images.*.is_primary' => 'sometimes|boolean'
@@ -51,7 +51,7 @@ class ProductController extends ApiController
                 'discount_price',
                 'is_active',
                 'stock_quantity',
-                'category_id'
+                // 'category_id'
             ]));
 
             // Handle product images if provided
@@ -126,7 +126,7 @@ class ProductController extends ApiController
             'discount_price' => 'nullable|numeric|min:0',
             'is_active' => 'sometimes|boolean',
             'stock_quantity' => 'sometimes|integer|min:0',
-            'category_id' => 'sometimes|required|exists:categories,category_id',
+            // 'category_id' => 'sometimes|required|exists:categories,category_id',
             'images' => 'sometimes|array',
             'images.*.id' => 'sometimes|exists:product_images,id,product_id,' . $id,
             'images.*.url' => 'required_without:images.*.id|url',
@@ -155,7 +155,7 @@ class ProductController extends ApiController
                 'discount_price',
                 'is_active',
                 'stock_quantity',
-                'category_id'
+                // 'category_id'
             ]));
 
             // Handle image deletions
@@ -241,7 +241,7 @@ class ProductController extends ApiController
     {
         $validator = Validator::make($request->all(), [
             'query' => 'nullable|string',
-            'category_id' => 'nullable|exists:categories,category_id',
+            // 'category_id' => 'nullable|exists:categories,category_id',
             'min_price' => 'nullable|numeric|min:0',
             'max_price' => 'nullable|numeric|min:0',
             'is_active' => 'boolean',
@@ -261,9 +261,9 @@ class ProductController extends ApiController
             });
         }
 
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
-        }
+        // if ($request->has('category_id')) {
+        //     $query->where('category_id', $request->input('category_id'));
+        // }
 
         if ($request->has('min_price')) {
             $query->where('price', '>=', $request->input('min_price'));
