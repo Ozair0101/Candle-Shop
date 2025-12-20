@@ -68,7 +68,7 @@ class ProductController extends ApiController
                 $images = [];
                 foreach ($files as $index => $file) {
                     $path = $file->store('products', 'public');
-                    $url = Storage::url($path);
+                    $url = config('app.url') . Storage::url($path);
 
                     $images[] = new ProductImage([
                         'url' => $url,
