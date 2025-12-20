@@ -6,6 +6,7 @@ use App\Models\Product;
 use App\Models\ProductImage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ProductController extends ApiController
@@ -26,9 +27,14 @@ class ProductController extends ApiController
             'is_active' => 'boolean',
             'stock_quantity' => 'integer|min:0',
             'category_id' => 'required|exists:categories,category_id',
+            // Optional legacy URL-based images
             'images' => 'sometimes|array',
-            'images.*.url' => 'required|url',
-            'images.*.is_primary' => 'sometimes|boolean'
+            'images.*.url' => 'nullable|url',
+            'images.*.is_primary' => 'sometimes|boolean',
+            // New file-based image uploads
+            'images_files' => 'sometimes|array',
+            'images_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'primary_index' => 'sometimes|integer|min:0',
         ]);
 
         // Validate that discount_price is less than price if provided
@@ -54,12 +60,39 @@ class ProductController extends ApiController
                 'category_id'
             ]));
 
-            // Handle product images if provided
-            if ($request->has('images') && is_array($request->images)) {
+            // Handle product images if provided via file upload (preferred)
+            if ($request->hasFile('images_files')) {
+                $files = $request->file('images_files');
+                $primaryIndex = (int) $request->input('primary_index', 0);
+
+                $images = [];
+                foreach ($files as $index => $file) {
+                    $path = $file->store('products', 'public');
+                    $url = Storage::url($path);
+
+                    $images[] = new ProductImage([
+                        'url' => $url,
+                        'is_primary' => $index === $primaryIndex,
+                    ]);
+                }
+
+                // Ensure exactly one primary if we have any images
+                if (!empty($images) && !$images[$primaryIndex]->is_primary) {
+                    $images[0]->is_primary = true;
+                }
+
+                $product->images()->saveMany($images);
+            }
+            // Fallback: legacy URL-based images array
+            elseif ($request->has('images') && is_array($request->images)) {
                 $hasPrimary = false;
                 $images = [];
 
                 foreach ($request->images as $imageData) {
+                    if (empty($imageData['url'])) {
+                        continue;
+                    }
+
                     $isPrimary = $imageData['is_primary'] ?? false;
                     
                     // Only one primary image is allowed
@@ -127,10 +160,15 @@ class ProductController extends ApiController
             'is_active' => 'sometimes|boolean',
             'stock_quantity' => 'sometimes|integer|min:0',
             'category_id' => 'sometimes|required|exists:categories,category_id',
+            // Optional legacy URL-based images
             'images' => 'sometimes|array',
             'images.*.id' => 'sometimes|exists:product_images,id,product_id,' . $id,
             'images.*.url' => 'required_without:images.*.id|url',
             'images.*.is_primary' => 'sometimes|boolean',
+            // New file-based image uploads
+            'images_files' => 'sometimes|array',
+            'images_files.*' => 'image|mimes:jpeg,png,jpg,gif,webp|max:10240',
+            'primary_index' => 'sometimes|integer|min:0',
             'deleted_image_ids' => 'sometimes|array',
             'deleted_image_ids.*' => 'exists:product_images,id,product_id,' . $id
         ]);
@@ -170,11 +208,38 @@ class ProductController extends ApiController
                 $product->images()->whereIn('id', $request->deleted_image_ids)->delete();
             }
 
-            // Handle image updates and additions
+            // Handle new image file uploads
+            if ($request->hasFile('images_files')) {
+                $files = $request->file('images_files');
+                $primaryIndex = (int) $request->input('primary_index', 0);
+
+                foreach ($files as $index => $file) {
+                    $path = $file->store('products', 'public');
+                    $url = Storage::url($path);
+
+                    $isPrimary = $index === $primaryIndex;
+
+                    if ($isPrimary) {
+                        // Clear existing primary flags
+                        $product->images()->update(['is_primary' => false]);
+                    }
+
+                    $product->images()->create([
+                        'url' => $url,
+                        'is_primary' => $isPrimary,
+                    ]);
+                }
+            }
+
+            // Handle image updates and additions from legacy URL-based payload
             if ($request->has('images') && is_array($request->images)) {
                 $hasPrimary = $product->images()->where('is_primary', true)->exists();
                 
                 foreach ($request->images as $imageData) {
+                    if (empty($imageData['url']) && empty($imageData['id'])) {
+                        continue;
+                    }
+
                     $isPrimary = $imageData['is_primary'] ?? false;
                     
                     // If this is a new image
