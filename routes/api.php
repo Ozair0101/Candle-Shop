@@ -25,6 +25,7 @@ Route::post('/register', [AuthController::class, 'register']);
 
 // Public product routes
 Route::get('/featured-products', [ProductController::class, 'featured']);
+Route::get('/latest-products', [ProductController::class, 'latest']);
 
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {

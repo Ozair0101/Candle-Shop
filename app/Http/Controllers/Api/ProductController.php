@@ -33,6 +33,19 @@ class ProductController extends ApiController
         return $this->success($products, 'Featured discounted products retrieved successfully');
     }
 
+    public function latest()
+    {
+        $products = Product::with(['images' => function ($q) {
+            $q->orderByDesc('is_primary');
+        }])
+            ->where('is_active', true)
+            ->orderByDesc('created_at')
+            ->limit(12)
+            ->get();
+
+        return $this->success($products, 'Latest products retrieved successfully');
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
