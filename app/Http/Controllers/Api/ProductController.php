@@ -17,6 +17,22 @@ class ProductController extends ApiController
         return $this->success($products, 'Products retrieved successfully');
     }
 
+    public function featured()
+    {
+        $products = Product::with(['images' => function ($q) {
+            $q->orderByDesc('is_primary');
+        }])
+            ->whereNotNull('discount_price')
+            ->whereColumn('discount_price', '<', 'price')
+            ->where('is_active', true)
+            ->where('stock_quantity', '>', 0)
+            ->orderByDesc('updated_at')
+            ->limit(8)
+            ->get();
+
+        return $this->success($products, 'Featured discounted products retrieved successfully');
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [

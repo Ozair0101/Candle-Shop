@@ -23,6 +23,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+// Public product routes
+Route::get('/featured-products', [ProductController::class, 'featured']);
+
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
