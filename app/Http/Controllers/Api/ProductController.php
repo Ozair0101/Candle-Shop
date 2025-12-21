@@ -68,7 +68,8 @@ class ProductController extends ApiController
                 $images = [];
                 foreach ($files as $index => $file) {
                     $path = $file->store('products', 'public');
-                    $url = config('app.url') . Storage::url($path);
+                    // Store relative URL (e.g. /storage/products/...) and let frontend prepend backend origin
+                    $url = Storage::url($path);
 
                     $images[] = new ProductImage([
                         'url' => $url,
@@ -215,6 +216,7 @@ class ProductController extends ApiController
 
                 foreach ($files as $index => $file) {
                     $path = $file->store('products', 'public');
+                    // Store relative URL (e.g. /storage/products/...) and let frontend prepend backend origin
                     $url = Storage::url($path);
 
                     $isPrimary = $index === $primaryIndex;
