@@ -62,4 +62,21 @@ class ProductReviewController extends ApiController
 
         return $this->success($review, 'Review submitted successfully', 201);
     }
+
+    public function destroy($productId, $reviewId)
+    {
+        $product = Product::find($productId);
+        if (!$product) {
+            return $this->error('Product not found', 404);
+        }
+
+        $review = ProductReview::where('product_id', $product->product_id)->find($reviewId);
+        if (!$review) {
+            return $this->error('Review not found', 404);
+        }
+
+        $review->delete();
+
+        return $this->success(null, 'Review deleted successfully');
+    }
 }

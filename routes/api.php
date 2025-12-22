@@ -77,6 +77,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::get('/search', [ProductController::class, 'search']);
+        Route::delete('/{productId}/reviews/{reviewId}', [ProductReviewController::class, 'destroy']);
     });
 
     // Payment API Routes
