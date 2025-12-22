@@ -13,15 +13,23 @@ class ProductController extends ApiController
 {
     public function index()
     {
-        $products = Product::with('images')->get();
+        $products = Product::with('images')
+            ->withCount('reviews as reviews_count')
+            ->withAvg('reviews as average_rating', 'rating')
+            ->get();
+
         return $this->success($products, 'Products retrieved successfully');
     }
 
     public function featured()
     {
-        $products = Product::with(['images' => function ($q) {
-            $q->orderByDesc('is_primary');
-        }])
+        $products = Product::with([
+                'images' => function ($q) {
+                    $q->orderByDesc('is_primary');
+                },
+            ])
+            ->withCount('reviews as reviews_count')
+            ->withAvg('reviews as average_rating', 'rating')
             ->whereNotNull('discount_price')
             ->whereColumn('discount_price', '<', 'price')
             ->where('is_active', true)
@@ -35,9 +43,13 @@ class ProductController extends ApiController
 
     public function latest()
     {
-        $products = Product::with(['images' => function ($q) {
-            $q->orderByDesc('is_primary');
-        }])
+        $products = Product::with([
+                'images' => function ($q) {
+                    $q->orderByDesc('is_primary');
+                },
+            ])
+            ->withCount('reviews as reviews_count')
+            ->withAvg('reviews as average_rating', 'rating')
             ->where('is_active', true)
             ->orderByDesc('created_at')
             ->limit(12)
@@ -373,7 +385,11 @@ class ProductController extends ApiController
             $query->where('is_active', $request->boolean('is_active'));
         }
 
-        $products = $query->get();
+        $products = $query
+            ->with('images')
+            ->withCount('reviews as reviews_count')
+            ->withAvg('reviews as average_rating', 'rating')
+            ->get();
 
         return $this->success($products, 'Products retrieved successfully');
     }
