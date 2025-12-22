@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\CartController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -23,9 +24,13 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
-// Public product routes
+// Public product routes (read-only)
 Route::get('/featured-products', [ProductController::class, 'featured']);
 Route::get('/latest-products', [ProductController::class, 'latest']);
+Route::get('/products', [ProductController::class, 'index']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+Route::get('/products/{id}/reviews', [ProductReviewController::class, 'index']);
+Route::post('/products/{id}/reviews', [ProductReviewController::class, 'store']);
 
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -65,11 +70,10 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::delete('/{id}', [CategoryController::class, 'destroy']);
     });
 
-    // Products API Routes
+    // Products API Routes (admin-only write/search operations)
     Route::prefix('products')->group(function () {
-        Route::get('/', [ProductController::class, 'index']);
+        // GET /products and GET /products/{id} are public (defined above)
         Route::post('/', [ProductController::class, 'store']);
-        Route::get('/{id}', [ProductController::class, 'show']);
         Route::put('/{id}', [ProductController::class, 'update']);
         Route::delete('/{id}', [ProductController::class, 'destroy']);
         Route::get('/search', [ProductController::class, 'search']);
