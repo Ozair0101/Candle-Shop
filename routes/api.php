@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -91,4 +92,7 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
         Route::delete('/{paymentId}', [PaymentController::class, 'destroy']); // Delete payment
         Route::post('/{paymentId}/refund', [PaymentController::class, 'refund']); // Refund payment
     });
+
+    // Users API Routes (admin-only)
+    Route::get('/users', [UserController::class, 'index']);
 });
