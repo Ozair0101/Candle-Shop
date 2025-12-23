@@ -64,6 +64,6 @@ class User extends Authenticatable
      */
     public function isUser(): bool
     {
-        return $this->role === 'user' || $this->role === null;
+        return $this->role === 'customer' || $this->role === null;
     }
 }
