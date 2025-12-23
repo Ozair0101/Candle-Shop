@@ -53,6 +53,14 @@ class OrderController extends ApiController
             'items.*.product_id' => 'required|exists:products,product_id',
             'items.*.variant_id' => 'nullable|integer',
             'items.*.quantity' => 'required|integer|min:1',
+            'email' => 'required|email',
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
+            'address' => 'required|string|max:255',
+            'city' => 'required|string|max:255',
+            'state' => 'required|string|max:100',
+            'zip_code' => 'required|string|max:20',
+            'phone' => 'required|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -92,6 +100,14 @@ class OrderController extends ApiController
                 'status' => 'pending',
                 'total_amount' => $totalAmount,
                 'payment_method' => $request->payment_method,
+                'email' => $request->email,
+                'first_name' => $request->first_name,
+                'last_name' => $request->last_name,
+                'address' => $request->address,
+                'city' => $request->city,
+                'state' => $request->state,
+                'zip_code' => $request->zip_code,
+                'phone' => $request->phone,
             ]);
 
             // Create order items
