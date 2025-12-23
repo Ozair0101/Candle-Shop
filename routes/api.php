@@ -55,6 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/{orderId}', [OrderController::class, 'update']); // Update order status
         Route::delete('/{orderId}', [OrderController::class, 'destroy']); // Delete order
         Route::post('/{orderId}/cancel', [OrderController::class, 'cancel']); // Cancel order
+        Route::put('/{orderId}/items/{orderItemId}', [OrderController::class, 'updateItem']); // Update order item quantity
+        Route::delete('/{orderId}/items/{orderItemId}', [OrderController::class, 'removeItem']); // Remove order item
         Route::get('/{orderId}/payments', [PaymentController::class, 'getByOrder']); // Get payments for order
     });
 });

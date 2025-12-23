@@ -227,4 +227,87 @@ class OrderController extends ApiController
 
         return $this->success($order, 'Order cancelled successfully');
     }
+
+    /**
+     * Update quantity of an order item (only for pending orders)
+     */
+    public function updateItem(Request $request, $orderId, $orderItemId)
+    {
+        $validator = Validator::make($request->all(), [
+            'quantity' => 'required|integer|min:1',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->error('Validation Error', 422, $validator->errors());
+        }
+
+        $order = Order::with('items')->find($orderId);
+
+        if (!$order) {
+            return $this->error('Order not found', 404);
+        }
+
+        if ($order->status !== 'pending') {
+            return $this->error('Only pending orders can be modified', 400);
+        }
+
+        $item = OrderItem::where('order_id', $orderId)
+            ->where('order_item_id', $orderItemId)
+            ->first();
+
+        if (!$item) {
+            return $this->error('Order item not found', 404);
+        }
+
+        $item->quantity = $request->quantity;
+        $item->save();
+
+        // Recalculate total amount
+        $totalAmount = OrderItem::where('order_id', $orderId)
+            ->sum(DB::raw('quantity * price_at_purchase'));
+
+        $order->total_amount = $totalAmount;
+        $order->save();
+
+        $order->load(['items.product.images', 'user']);
+
+        return $this->success($order, 'Order item updated successfully');
+    }
+
+    /**
+     * Remove an order item (only for pending orders)
+     */
+    public function removeItem($orderId, $orderItemId)
+    {
+        $order = Order::with('items')->find($orderId);
+
+        if (!$order) {
+            return $this->error('Order not found', 404);
+        }
+
+        if ($order->status !== 'pending') {
+            return $this->error('Only pending orders can be modified', 400);
+        }
+
+        $item = OrderItem::where('order_id', $orderId)
+            ->where('order_item_id', $orderItemId)
+            ->first();
+
+        if (!$item) {
+            return $this->error('Order item not found', 404);
+        }
+
+        $item->delete();
+
+        // Recalculate total amount (may become 0 if no items)
+        $totalAmount = OrderItem::where('order_id', $orderId)
+            ->sum(DB::raw('quantity * price_at_purchase'));
+
+        $order->total_amount = $totalAmount;
+        $order->save();
+
+        $order->load(['items.product.images', 'user']);
+
+        return $this->success($order, 'Order item removed successfully');
+    }
 }
