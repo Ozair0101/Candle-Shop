@@ -6,6 +6,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Cart;
+use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -129,6 +130,17 @@ class OrderController extends ApiController
                 }
             }
 
+            // If payment method is COD, create a pending payment record
+            if ($order->payment_method === 'cod') {
+                Payment::create([
+                    'order_id' => $order->order_id,
+                    'status' => 'pending',
+                    'amount' => $order->total_amount,
+                    'transaction_id' => null,
+                    'payment_provider' => 'cod',
+                ]);
+            }
+
             DB::commit();
 
             // Load relationships
@@ -175,12 +187,34 @@ class OrderController extends ApiController
             return $this->error('Order not found', 404);
         }
 
-        $order->status = $request->status;
-        $order->save();
+        try {
+            DB::beginTransaction();
 
-        $order->load(['items.product.images']);
+            $order->status = $request->status;
+            $order->save();
 
-        return $this->success($order, 'Order status updated successfully');
+            // If this is a COD order, keep the related payment in sync
+            if ($order->payment_method === 'cod') {
+                $paymentsQuery = Payment::where('order_id', $order->order_id);
+
+                if ($request->status === 'delivered') {
+                    // Cash has been collected successfully
+                    $paymentsQuery->update(['status' => 'success']);
+                } elseif ($request->status === 'cancelled') {
+                    // Order cancelled, mark any pending COD payment as failed
+                    $paymentsQuery->where('status', 'pending')->update(['status' => 'failed']);
+                }
+            }
+
+            DB::commit();
+
+            $order->load(['items.product.images']);
+
+            return $this->success($order, 'Order status updated successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('Failed to update order status: ' . $e->getMessage(), 500);
+        }
     }
 
     /**
@@ -220,12 +254,28 @@ class OrderController extends ApiController
             return $this->error('Cannot cancel order with status: ' . $order->status, 400);
         }
 
-        $order->status = 'cancelled';
-        $order->save();
+        try {
+            DB::beginTransaction();
 
-        $order->load(['items.product.images']);
+            $order->status = 'cancelled';
+            $order->save();
 
-        return $this->success($order, 'Order cancelled successfully');
+            // For COD orders, mark any pending payment as failed when order is cancelled
+            if ($order->payment_method === 'cod') {
+                Payment::where('order_id', $order->order_id)
+                    ->where('status', 'pending')
+                    ->update(['status' => 'failed']);
+            }
+
+            DB::commit();
+
+            $order->load(['items.product.images']);
+
+            return $this->success($order, 'Order cancelled successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return $this->error('Failed to cancel order: ' . $e->getMessage(), 500);
+        }
     }
 
     /**
