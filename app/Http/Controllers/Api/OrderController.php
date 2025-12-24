@@ -138,6 +138,7 @@ class OrderController extends ApiController
                     'amount' => $order->total_amount,
                     'transaction_id' => null,
                     'payment_provider' => 'cod',
+                    'created_at' => now(),
                 ]);
             }
 
@@ -196,6 +197,20 @@ class OrderController extends ApiController
             // If this is a COD order, keep the related payment in sync
             if ($order->payment_method === 'cod') {
                 $paymentsQuery = Payment::where('order_id', $order->order_id);
+
+                // Ensure a payment record exists for this order
+                if (!$paymentsQuery->exists()) {
+                    Payment::create([
+                        'order_id' => $order->order_id,
+                        'status' => $request->status === 'delivered' ? 'success' : 'pending',
+                        'amount' => $order->total_amount,
+                        'transaction_id' => null,
+                        'payment_provider' => 'cod',
+                        'created_at' => now(),
+                    ]);
+                    // Refresh the query after creating
+                    $paymentsQuery = Payment::where('order_id', $order->order_id);
+                }
 
                 if ($request->status === 'delivered') {
                     // Cash has been collected successfully
@@ -260,11 +275,25 @@ class OrderController extends ApiController
             $order->status = 'cancelled';
             $order->save();
 
-            // For COD orders, mark any pending payment as failed when order is cancelled
+            // For COD orders, mark any pending payment as failed when order is cancelled,
+            // and create one if it does not exist yet
             if ($order->payment_method === 'cod') {
-                Payment::where('order_id', $order->order_id)
-                    ->where('status', 'pending')
-                    ->update(['status' => 'failed']);
+                $paymentsQuery = Payment::where('order_id', $order->order_id);
+
+                if (!$paymentsQuery->exists()) {
+                    Payment::create([
+                        'order_id' => $order->order_id,
+                        'status' => 'failed',
+                        'amount' => $order->total_amount,
+                        'transaction_id' => null,
+                        'payment_provider' => 'cod',
+                        'created_at' => now(),
+                    ]);
+                } else {
+                    $paymentsQuery
+                        ->where('status', 'pending')
+                        ->update(['status' => 'failed']);
+                }
             }
 
             DB::commit();
