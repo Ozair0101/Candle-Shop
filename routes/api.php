@@ -95,4 +95,5 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Users API Routes (admin-only)
     Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
 });
