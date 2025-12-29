@@ -68,6 +68,7 @@ class ProductController extends ApiController
             'is_active' => 'boolean',
             'stock_quantity' => 'integer|min:0',
             'category_id' => 'required|exists:categories,category_id',
+            'video' => 'sometimes|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv|max:51200',
             // Optional legacy URL-based images
             'images' => 'sometimes|array',
             'images.*.url' => 'nullable|url',
@@ -98,8 +99,15 @@ class ProductController extends ApiController
                 'discount_price',
                 'is_active',
                 'stock_quantity',
-                'category_id'
+                'category_id',
             ]));
+
+            if ($request->hasFile('video')) {
+                $videoPath = $request->file('video')->store('product_videos', 'public');
+                $videoUrl = Storage::url($videoPath);
+                $product->video = $videoUrl;
+                $product->save();
+            }
 
             // Handle product images if provided via file upload (preferred)
             if ($request->hasFile('images_files')) {
@@ -202,6 +210,7 @@ class ProductController extends ApiController
             'is_active' => 'sometimes|boolean',
             'stock_quantity' => 'sometimes|integer|min:0',
             'category_id' => 'sometimes|required|exists:categories,category_id',
+            'video' => 'sometimes|file|mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/x-ms-wmv|max:51200',
             // Optional legacy URL-based images
             'images' => 'sometimes|array',
             'images.*.id' => 'sometimes|exists:product_images,id,product_id,' . $id,
@@ -235,8 +244,15 @@ class ProductController extends ApiController
                 'discount_price',
                 'is_active',
                 'stock_quantity',
-                'category_id'
+                'category_id',
             ]));
+
+            if ($request->hasFile('video')) {
+                $videoPath = $request->file('video')->store('product_videos', 'public');
+                $videoUrl = Storage::url($videoPath);
+                $product->video = $videoUrl;
+                $product->save();
+            }
 
             // Handle image deletions
             if ($request->has('deleted_image_ids') && is_array($request->deleted_image_ids)) {
