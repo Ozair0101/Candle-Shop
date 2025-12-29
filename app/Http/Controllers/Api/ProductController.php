@@ -17,13 +17,12 @@ class ProductController extends ApiController
             ->withCount('reviews as reviews_count')
             ->withAvg('reviews as average_rating', 'rating');
 
-        $perPage = (int) $request->query('per_page', 0);
-
-        if ($perPage > 0) {
-            $products = $query->paginate($perPage);
-        } else {
-            $products = $query->get();
+        $perPage = (int) $request->query('per_page', 12);
+        if ($perPage <= 0) {
+            $perPage = 12;
         }
+
+        $products = $query->paginate($perPage);
 
         return $this->success($products, 'Products retrieved successfully');
     }
