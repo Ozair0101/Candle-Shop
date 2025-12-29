@@ -11,12 +11,19 @@ use Illuminate\Support\Facades\Validator;
 
 class ProductController extends ApiController
 {
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::with('images')
+        $query = Product::with('images')
             ->withCount('reviews as reviews_count')
-            ->withAvg('reviews as average_rating', 'rating')
-            ->get();
+            ->withAvg('reviews as average_rating', 'rating');
+
+        $perPage = (int) $request->query('per_page', 0);
+
+        if ($perPage > 0) {
+            $products = $query->paginate($perPage);
+        } else {
+            $products = $query->get();
+        }
 
         return $this->success($products, 'Products retrieved successfully');
     }
