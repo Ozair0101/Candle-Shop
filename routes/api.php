@@ -8,6 +8,9 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\TestimonialController;
+use App\Http\Controllers\Api\Admin\TestimonialAdminController;
+
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -32,6 +35,9 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/{id}/reviews', [ProductReviewController::class, 'index']);
 Route::post('/products/{id}/reviews', [ProductReviewController::class, 'store']);
+
+// Public testimonials list (approved only when status=approved)
+Route::get('/testimonials', [TestimonialController::class, 'index']);
 
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
@@ -60,6 +66,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{orderId}/items/{orderItemId}', [OrderController::class, 'removeItem']); // Remove order item
         Route::get('/{orderId}/payments', [PaymentController::class, 'getByOrder']); // Get payments for order
     });
+
+    // User testimonials (create)
+    Route::post('/testimonials', [TestimonialController::class, 'store']);
 });
 
 // Admin-only routes
@@ -96,4 +105,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     // Users API Routes (admin-only)
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
+
+    // Testimonials admin review routes
+    Route::get('/admin/testimonials', [TestimonialAdminController::class, 'index']);
+    Route::post('/admin/testimonials/{testimonial}/approve', [TestimonialAdminController::class, 'approve']);
+    Route::post('/admin/testimonials/{testimonial}/reject', [TestimonialAdminController::class, 'reject']);
 });
