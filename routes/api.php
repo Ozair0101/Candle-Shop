@@ -114,6 +114,9 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
 
+    // Contact messages (admin-only)
+    Route::get('/contact-messages', [ContactMessageController::class, 'index']);
+
     // Testimonials admin review routes
     Route::get('/admin/testimonials', [TestimonialAdminController::class, 'index']);
     Route::post('/admin/testimonials/{testimonial}/approve', [TestimonialAdminController::class, 'approve']);

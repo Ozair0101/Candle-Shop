@@ -8,6 +8,13 @@ use Illuminate\Http\Request;
 
 class ContactMessageController extends ApiController
 {
+    public function index()
+    {
+        $messages = ContactMessage::orderByDesc('created_at')->paginate(20);
+
+        return $this->success($messages);
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
