@@ -4,13 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Models\Product;
 use App\Models\ProductImage;
+use App\Services\ImageOptimizationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Intervention\Image\ImageManager;
 
 class ProductController extends ApiController
 {
+    protected $imageOptimizationService;
+
+    public function __construct(ImageOptimizationService $imageOptimizationService)
+    {
+        $this->imageOptimizationService = $imageOptimizationService;
+    }
+
     public function index(Request $request)
     {
         $query = Product::with('images')
@@ -122,7 +131,10 @@ class ProductController extends ApiController
 
                 $images = [];
                 foreach ($files as $index => $file) {
-                    $path = $file->store('products', 'public');
+                    // Optimize the image
+                    $optimizedImage = $this->imageOptimizationService->optimize($file);
+                    $path = $optimizedImage->store('products', 'public');
+                    
                     // Store relative URL (e.g. /storage/products/...) and let frontend prepend backend origin
                     $url = Storage::url($path);
 
@@ -187,7 +199,6 @@ class ProductController extends ApiController
             return $this->error('Failed to create product: ' . $e->getMessage(), 500);
         }
     }
-
 
     public function show($id)
     {
@@ -278,7 +289,10 @@ class ProductController extends ApiController
                 $primaryIndex = (int) $request->input('primary_index', 0);
 
                 foreach ($files as $index => $file) {
-                    $path = $file->store('products', 'public');
+                    // Optimize the image
+                    $optimizedImage = $this->imageOptimizationService->optimize($file);
+                    $path = $optimizedImage->store('products', 'public');
+                    
                     // Store relative URL (e.g. /storage/products/...) and let frontend prepend backend origin
                     $url = Storage::url($path);
 
