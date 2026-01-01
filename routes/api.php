@@ -51,7 +51,8 @@ Route::get('/testimonials', [TestimonialController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
-    
+    Route::put('/user/profile', [AuthController::class, 'updateProfile']);
+
     // Cart API Routes
     Route::prefix('cart')->group(function () {
         Route::get('/', [CartController::class, 'index']); // Get cart by user_id (query param)

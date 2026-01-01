@@ -71,6 +71,34 @@ class AuthController extends Controller
     }
 
     /**
+     * Update authenticated user's profile
+     */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'password' => ['nullable', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        $user->name = $validated['name'];
+        $user->email = $validated['email'];
+
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'user' => $user,
+            'message' => 'Profile updated successfully.',
+        ]);
+    }
+
+    /**
      * Register a new user
      *
      * @param Request $request
