@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\ProductReviewController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TestimonialController;
+use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Admin\TestimonialAdminController;
 
 use Illuminate\Support\Facades\Route;
@@ -28,13 +29,16 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/register', [AuthController::class, 'register']);
 
+// Image optimization route - should be public
+Route::get('/images/{path}', [ImageController::class, 'serve'])->where('path', '.*');
+
 // Public product routes (read-only)
 Route::get('/featured-products', [ProductController::class, 'featured']);
 Route::get('/latest-products', [ProductController::class, 'latest']);
 Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
-Route::get('/products/{id}/reviews', [ProductReviewController::class, 'index']);
-Route::post('/products/{id}/reviews', [ProductReviewController::class, 'store']);
+Route::get('/products/{id}/reviews', [ProductController::class, 'index']);
+Route::post('/products/{id}/reviews', [ProductController::class, 'store']);
 
 // Public testimonials list (approved only when status=approved)
 Route::get('/testimonials', [TestimonialController::class, 'index']);
