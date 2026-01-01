@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Admin\TestimonialAdminController;
+use App\Http\Controllers\Api\ContactMessageController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -39,6 +40,9 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 Route::get('/products/{id}/reviews', [ProductController::class, 'index']);
 Route::post('/products/{id}/reviews', [ProductController::class, 'store']);
+
+// Public contact messages route
+Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 
 // Public testimonials list (approved only when status=approved)
 Route::get('/testimonials', [TestimonialController::class, 'index']);
