@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\TestimonialController;
 use App\Http\Controllers\Api\ImageController;
 use App\Http\Controllers\Api\Admin\TestimonialAdminController;
 use App\Http\Controllers\Api\ContactMessageController;
+use App\Http\Controllers\Api\Admin\AdminNotificationController;
 
 use Illuminate\Support\Facades\Route;
 
@@ -117,6 +118,11 @@ Route::middleware(['auth:sanctum', 'admin'])->group(function () {
 
     // Contact messages (admin-only)
     Route::get('/contact-messages', [ContactMessageController::class, 'index']);
+
+    // Admin notifications
+    Route::get('/admin/notifications', [AdminNotificationController::class, 'index']);
+    Route::post('/admin/notifications/mark-all-read', [AdminNotificationController::class, 'markAllAsRead']);
+    Route::post('/admin/notifications/{id}/mark-read', [AdminNotificationController::class, 'markAsRead']);
 
     // Testimonials admin review routes
     Route::get('/admin/testimonials', [TestimonialAdminController::class, 'index']);
