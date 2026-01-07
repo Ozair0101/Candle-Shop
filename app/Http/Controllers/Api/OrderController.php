@@ -7,6 +7,7 @@ use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\Cart;
 use App\Models\Payment;
+use App\Models\AdminNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -143,6 +144,28 @@ class OrderController extends ApiController
             }
 
             DB::commit();
+
+            // Create admin notification for new order
+            try {
+                $customerName = trim(($order->first_name ?? '') . ' ' . ($order->last_name ?? ''));
+                if ($customerName === '') {
+                    $customerName = 'Customer #' . $order->user_id;
+                }
+
+                AdminNotification::create([
+                    'type' => 'order_created',
+                    'title' => 'New order #' . $order->order_id . ' placed',
+                    'message' => $customerName . ' placed an order of $' . number_format((float) $order->total_amount, 2),
+                    'data' => [
+                        'order_id' => $order->order_id,
+                        'user_id' => $order->user_id,
+                        'total_amount' => $order->total_amount,
+                        'payment_method' => $order->payment_method,
+                    ],
+                ]);
+            } catch (\Throwable $e) {
+                // Do not fail order creation if notification fails
+            }
 
             // Load relationships
             $order->load(['items.product.images']);
