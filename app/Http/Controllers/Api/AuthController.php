@@ -7,6 +7,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -126,5 +127,29 @@ class AuthController extends Controller
             'user' => $user,
             'message' => 'Registered and logged in successfully'
         ], 201);
+    }
+
+    /**
+     * Send a password reset link to the given email.
+     */
+    public function sendResetLink(Request $request)
+    {
+        $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $status = Password::sendResetLink(
+            $request->only('email')
+        );
+
+        if ($status === Password::RESET_LINK_SENT) {
+            return response()->json([
+                'message' => __($status),
+            ]);
+        }
+
+        return response()->json([
+            'message' => __($status),
+        ], 422);
     }
 }
